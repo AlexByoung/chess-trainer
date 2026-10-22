@@ -4,7 +4,7 @@
 
 ## 功能
 
-- **谜题**：Lichess 公开题库中抽样的 4000 道高人气题（600–2600 分）。对手的第一步自动走（带动画），你走一步、对手 300–500ms 后应答，直到解完。直接将杀的非标准走法也算对；升变时会弹出选择框。走错时棋盘抖动、红圈标记、自动撤回，可以重试或看答案。解对后 0.8 秒自动进入下一题（可在设置里关闭）。Glicko-2 评分（初始 1200），按评分选题，最近做过的题不重复，可按主题筛选。
+- **谜题**：Lichess 公开题库中抽样的 4000 道高人气题（600–2600 分）。对手的第一步自动走（带动画），你走一步、对手 300–500ms 后应答，直到解完。直接将杀的非标准走法也算对；升变时会弹出选择框。走错时红圈标记、手机振动（Android；iPhone 需 iOS 18+ Safari）、自动撤回，可以重试或看答案。解对后 0.8 秒自动进入下一题（可在设置里关闭）。Glicko-2 评分（初始 1200），按评分选题，最近做过的题不重复，可按主题筛选。
 - **冲刺**：3 分钟限时，题目由易到难，错 3 题结束，记录最高分。
 - **对局**：执白 / 执黑 / 随机，6 档难度（约 800–2400）。悔棋、提示箭头、翻转棋盘、局面评估条（默认关）。对局自动保存，刷新后继续。将杀、逼和、三次重复、50 步规则、子力不足都会判定。
 - 拖拽和点选两种走法、合法落点提示、上一步和被将军高亮；深色 / 浅色（跟随系统或手动）、3 套棋盘配色；WebAudio 合成音效，可静音。
@@ -43,8 +43,8 @@ zstd -dc puzzles.csv.zst | node scripts/build-puzzles.mjs --out public/puzzles.j
 
 ## 技术栈
 
-Vite + TypeScript（不用框架：chessground 本身是命令式 DOM，界面又小，直接写 DOM 更轻）、[chess.js](https://github.com/jhlywa/chess.js) 规则、[chessground](https://github.com/lichess-org/chessground) 棋盘（cburnett 棋子）、[Stockfish.js](https://github.com/nmrugg/stockfish.js) 引擎。
+Vite + TypeScript（不用框架：chessground 本身是命令式 DOM，界面又小，直接写 DOM 更轻）、[chess.js](https://github.com/jhlywa/chess.js) 规则、[chessground](https://github.com/lichess-org/chessground) 棋盘，棋子来自 Lichess（默认 maestro，设置里可换 staunty / cardinal / merida / cburnett，授权见 `public/pieces/LICENSES.md`）、[Stockfish.js](https://github.com/nmrugg/stockfish.js) 引擎。
 
 ## 许可
 
-GPL-3.0（chessground 和 Stockfish 都是 GPLv3）。谜题数据 CC0。
+GPL-3.0（chessground 和 Stockfish 都是 GPLv3）。谜题数据 CC0。棋子图片各有授权（maestro / staunty / cardinal 为 CC BY-NC-SA 4.0，merida / cburnett 为 GPLv2+），见 `public/pieces/LICENSES.md`。

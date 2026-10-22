@@ -2,6 +2,7 @@ import type { Move } from 'chess.js';
 import type { Key } from 'chessground/types';
 import { PuzzleRunner, type Puzzle } from '../core/puzzle';
 import type { Board } from './board';
+import { buzz } from './haptics';
 import { moveSound, play } from './sound';
 
 export type PlayerPhase = 'idle' | 'opening' | 'player' | 'opponent' | 'replay' | 'done';
@@ -80,7 +81,8 @@ export class PuzzlePlayer {
     const res = r.attempt(uci);
     if (res.kind === 'wrong') {
       play('error');
-      // Leave the wrong move on the board for a moment (shake + red mark), then take it back.
+      buzz();
+      // Leave the wrong move on the board for a moment (red mark), then take it back.
       this.board.wrong(uci.slice(2, 4));
       this.board.cg.set({ movable: { dests: new Map() } });
       this.setPhase(this.opts.retryOnWrong ? 'opponent' : 'done', false);

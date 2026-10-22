@@ -11,12 +11,17 @@ const KEYS = {
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 export type BoardTheme = 'green' | 'brown' | 'blue';
+export const PIECE_SETS = ['maestro', 'staunty', 'cardinal', 'merida', 'cburnett'] as const;
+export type PieceSet = (typeof PIECE_SETS)[number];
 export type View = 'puzzle' | 'storm' | 'game';
 
 export interface Settings {
   theme: ThemeMode;
   board: BoardTheme;
+  pieces: PieceSet;
   sound: boolean;
+  /** Vibrate on a wrong puzzle move (phones only). */
+  haptics: boolean;
   autoNext: boolean;
   showEval: boolean;
   themeFilter: string;
@@ -76,7 +81,9 @@ export const RECENT_LIMIT = 1500;
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   board: 'green',
+  pieces: 'maestro',
   sound: true,
+  haptics: true,
   autoNext: true,
   showEval: false,
   themeFilter: 'all',

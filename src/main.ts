@@ -1,14 +1,14 @@
 import 'chessground/assets/chessground.base.css';
-import 'chessground/assets/chessground.cburnett.css';
 import './styles.css';
 
 import { puzzleFromRow, type PuzzleRow } from './core/puzzle';
-import { store, type Settings, type View as ViewName } from './core/storage';
+import { PIECE_SETS, store, type Settings, type View as ViewName } from './core/storage';
 import { Board } from './ui/board';
 import type { Ctx, EvalBar, Modal, PuzzleDb, View } from './ui/context';
 import { GameView } from './ui/gameView';
 import { PuzzleView } from './ui/puzzleView';
 import { settingsPanel } from './ui/settingsPanel';
+import { setHapticsEnabled } from './ui/haptics';
 import { setSoundEnabled, unlockAudio } from './ui/sound';
 import { StormView } from './ui/stormView';
 
@@ -21,7 +21,13 @@ function applySettings() {
   if (settings.theme === 'system') delete root.dataset.theme;
   else root.dataset.theme = settings.theme;
   root.dataset.board = settings.board;
+  // The <link> is created by the inline script in index.html (before first paint).
+  const pieces = PIECE_SETS.includes(settings.pieces) ? settings.pieces : 'maestro';
+  const link = document.getElementById('piece-css') as HTMLLinkElement | null;
+  const href = `pieces/${pieces}/pieces.css`;
+  if (link && link.getAttribute('href') !== href) link.setAttribute('href', href);
   setSoundEnabled(settings.sound);
+  setHapticsEnabled(settings.haptics);
   const btn = $('#sound-toggle');
   btn.classList.toggle('off', !settings.sound);
   btn.setAttribute('aria-label', settings.sound ? '静音' : '打开声音');

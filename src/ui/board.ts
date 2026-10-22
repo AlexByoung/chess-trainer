@@ -83,14 +83,9 @@ export class Board {
     this.shapes([{ orig: uci.slice(0, 2) as Key, dest: uci.slice(2, 4) as Key, brush }]);
   }
 
-  /** Board shake + red mark on the square of the wrong move. */
+  /** Red mark on the square of the wrong move. */
   wrong(square: string) {
     this.shapes([{ orig: square as Key, brush: 'red' }]);
-    const wrap = this.el.closest('.board-frame') ?? this.el;
-    wrap.classList.remove('shake');
-    void (wrap as HTMLElement).offsetWidth;
-    wrap.classList.add('shake');
-    setTimeout(() => wrap.classList.remove('shake'), 450);
   }
 
   success(square: string) {

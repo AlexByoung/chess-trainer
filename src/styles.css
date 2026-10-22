@@ -698,6 +698,33 @@ dialog h3 {
   background: linear-gradient(135deg, #dfe5ea 50%, #8ea4b4 50%);
 }
 
+.piece-sets {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.piece-choice {
+  display: flex;
+  justify-content: center;
+  padding: 4px 2px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--sq-light);
+  cursor: pointer;
+}
+
+.piece-choice img {
+  width: 50%;
+  max-width: 34px;
+  aspect-ratio: 1;
+}
+
+.piece-choice.on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
 .levels {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -860,35 +887,4 @@ cg-board square.check {
   width: 84%;
   height: 84%;
   pointer-events: none;
-}
-
-.board-frame.shake {
-  animation: shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
-}
-
-@keyframes shake {
-  10%,
-  90% {
-    transform: translateX(-2px);
-  }
-  20%,
-  80% {
-    transform: translateX(4px);
-  }
-  30%,
-  50%,
-  70% {
-    transform: translateX(-6px);
-  }
-  40%,
-  60% {
-    transform: translateX(6px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .board-frame.shake {
-    animation: none;
-    outline: 3px solid var(--bad);
-  }
 }

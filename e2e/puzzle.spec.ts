@@ -70,7 +70,7 @@ test('progress survives a reload, including a puzzle in progress', async ({ page
   expect(errors).toEqual([]);
 });
 
-test('a wrong move shakes, is taken back, and the puzzle no longer counts', async ({ page, browserName }, info) => {
+test('a wrong move is marked red, taken back, and the puzzle no longer counts', async ({ page, browserName }, info) => {
   test.skip(info.project.name !== 'desktop', 'drag uses the mouse');
   void browserName;
   const errors = trackErrors(page);
@@ -84,7 +84,6 @@ test('a wrong move shakes, is taken back, and the puzzle no longer counts', asyn
 
   await dragMove(page, wrong.lan);
   await expect(page.getByTestId('puzzle-status')).toContainText('不对');
-  await expect(page.locator('.board-frame.shake')).toHaveCount(1);
   // Taken back automatically.
   await expect(page.locator('cg-board piece')).toHaveCount(before);
   expect((await progress(page)).current.ply).toBe(1);
