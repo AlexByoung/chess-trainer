@@ -1,0 +1,8 @@
+node_modules/
+dist/
+public/engine/
+test-results/
+playwright-report/
+*.csv
+*.csv.zst
+.DS_Store

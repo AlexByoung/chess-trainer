@@ -1,0 +1,37 @@
+name: Build puzzle set
+
+# Manually triggered: downloads the full Lichess puzzle DB on the runner,
+# samples it with scripts/build-puzzles.mjs and commits only the small result.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Number of puzzles to sample
+        default: '4000'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Download Lichess puzzle database
+        run: curl -fsSL --retry 3 -o "$RUNNER_TEMP/puzzles.csv.zst" https://database.lichess.org/lichess_db_puzzle.csv.zst
+      - name: Sample puzzles
+        run: zstd -dc "$RUNNER_TEMP/puzzles.csv.zst" | node scripts/build-puzzles.mjs --target "${{ inputs.target }}" --out public/puzzles.json.gz
+      - name: Commit result
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/puzzles.json.gz
+          git diff --cached --quiet && { echo "No change"; exit 0; }
+          git commit -m "Update sampled puzzle set from Lichess puzzle DB"
+          git push

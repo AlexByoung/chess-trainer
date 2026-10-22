@@ -1,0 +1,27 @@
+{
+  "name": "chess-trainer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "dev": "node scripts/copy-engine.mjs && vite",
+    "build": "node scripts/copy-engine.mjs && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "puzzles": "node scripts/build-puzzles.mjs"
+  },
+  "dependencies": {
+    "chess.js": "^1.4.0",
+    "chessground": "^9.2.1",
+    "stockfish": "^18.0.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^22.20.5",
+    "typescript": "5.9",
+    "vite": "^7.3.7",
+    "vitest": "^5.0.5"
+  }
+}
