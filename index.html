@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f2ee" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1d1f21" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="棋练" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+    <title>棋练 · 国际象棋训练</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand"><span class="logo" aria-hidden="true">♞</span><span>棋练</span></div>
+        <nav class="tabs" aria-label="模式">
+          <button type="button" data-view="puzzle">谜题</button>
+          <button type="button" data-view="storm">冲刺</button>
+          <button type="button" data-view="game">对局</button>
+        </nav>
+        <div class="actions">
+          <button type="button" id="sound-toggle" class="icon" aria-label="静音">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9v6h4l5 4V5L8 9H4z" />
+              <path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" />
+              <path class="mute" d="M16.5 9.5l5 5M21.5 9.5l-5 5" />
+            </svg>
+          </button>
+          <button type="button" id="settings-open" class="icon" aria-label="设置" title="设置">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.2" />
+              <path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" />
+            </svg>
+          </button>
+        </div>
+      </header>
+      <main class="stage">
+        <div class="board-area">
+          <div id="evalbar" hidden><div class="fill"></div></div>
+          <div class="board-frame"><div id="board"></div></div>
+        </div>
+        <aside id="panel" class="panel"></aside>
+      </main>
+    </div>
+    <dialog id="modal"></dialog>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
