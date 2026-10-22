@@ -19,7 +19,7 @@ test('plays against Stockfish, AI replies, and the game survives a reload', asyn
   const status = page.getByTestId('game-status');
   await expect(status).toContainText('轮到你走', { timeout: 30_000 });
   await playMove(page, 'e2e4');
-  await expect(status).toContainText('对手思考中');
+  // (No check for the "thinking" status: at level 1 it can be shorter than one poll.)
   await expect.poll(() => moves(page), { timeout: 30_000 }).toHaveLength(2);
   await expect(status).toContainText('轮到你走');
   await expect(page.locator('cg-board square.last-move')).toHaveCount(2);
