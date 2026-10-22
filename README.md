@@ -22,6 +22,14 @@ npm run e2e        # Playwright 冒烟测试（会自动构建并起 preview 服
 
 `npm run dev/build` 会先把 `node_modules/stockfish` 里的单线程 WASM 版本（`stockfish-18-lite-single`，约 7MB）复制到 `public/engine/`。它在 Web Worker 里运行，不需要 SharedArrayBuffer，也不需要 COOP/COEP 响应头，任何静态托管都能跑。
 
+## 部署
+
+线上地址：<https://alexbyoung.github.io/chess-trainer/>
+
+推送到 `main` 后，GitHub Actions（`.github/workflows/ci.yml`）会依次：跑单元测试 → 构建 → 用 Playwright 对本地构建做冒烟测试 → 部署到 GitHub Pages → 等新版本上线（比对 `version.json` 里的 commit）后，再对线上地址跑一遍同样的 Playwright 测试，包括 Stockfish 应答。
+
+一次性设置：Settings → Pages → Build and deployment → Source 选 **GitHub Actions**（私有仓库需要 GitHub Pro，否则先把仓库设为 Public）。构建用的是相对路径，仓库改名不影响页面。
+
 ## 谜题数据
 
 `public/puzzles.json.gz` 由 `scripts/build-puzzles.mjs` 从 [Lichess 谜题库](https://database.lichess.org/#puzzles)（CC0）生成：筛选 Popularity ≥ 90、NbPlays ≥ 1000、RatingDeviation ≤ 90，在 600–2600 分之间每 100 分一档、每档随机抽 200 题，并用 chess.js 回放整条解法确认合法。完整题库不会进入仓库。
