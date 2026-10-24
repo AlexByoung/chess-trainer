@@ -14,8 +14,10 @@ export type BoardTheme = 'green' | 'brown' | 'blue';
 export const PIECE_SETS = ['maestro', 'staunty', 'cardinal', 'merida', 'cburnett'] as const;
 export type PieceSet = (typeof PIECE_SETS)[number];
 export type View = 'puzzle' | 'storm' | 'game';
+export type Lang = 'zh' | 'en';
 
 export interface Settings {
+  lang: Lang;
   theme: ThemeMode;
   board: BoardTheme;
   pieces: PieceSet;
@@ -79,6 +81,7 @@ export const HISTORY_LIMIT = 500;
 export const RECENT_LIMIT = 1500;
 
 export const DEFAULT_SETTINGS: Settings = {
+  lang: 'zh',
   theme: 'system',
   board: 'green',
   pieces: 'maestro',

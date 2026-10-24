@@ -2,7 +2,8 @@ import type { Puzzle } from '../core/puzzle';
 import { recordResult, rememberRecent } from '../core/progress';
 import { selectPuzzle } from '../core/selector';
 import { store, type PuzzleProgress } from '../core/storage';
-import { THEME_FILTERS, themeName, visibleThemes } from '../core/themes';
+import { THEME_FILTERS, filterLabel, themeName, visibleThemes } from '../core/themes';
+import { t } from '../i18n';
 import type { Ctx, PuzzleDb, View } from './context';
 import { h } from './dom';
 import { PuzzlePlayer, type PlayerPhase } from './puzzlePlayer';
@@ -52,13 +53,13 @@ export class PuzzleView implements View {
   mount() {
     this.buildPanel();
     this.ctx.evalBar.show(false);
-    this.setStatus('加载题库…');
+    this.setStatus(t('loadingPuzzles'));
     this.ctx.puzzles().then(
       (db) => {
         this.db = db;
         this.resumeOrNext();
       },
-      (err) => this.setStatus(`题库加载失败：${err instanceof Error ? err.message : err}`, 'bad'),
+      (err) => this.setStatus(t('puzzlesFailed', err instanceof Error ? err.message : String(err)), 'bad'),
     );
   }
 
@@ -94,7 +95,7 @@ export class PuzzleView implements View {
     if (this.player.runner && phase !== 'done' && !(phase === 'idle')) return;
     this.clearAutoNext();
     const p = this.next && this.matchesFilter(this.next) ? this.next : this.pick();
-    if (!p) return this.setStatus('没有符合该主题的题目', 'bad');
+    if (!p) return this.setStatus(t('noPuzzleForTheme'), 'bad');
     this.startPuzzle(p);
   }
 
@@ -136,7 +137,7 @@ export class PuzzleView implements View {
   private hint() {
     if (this.player.hint()) {
       this.record(false);
-      this.setStatus('已使用提示，本题不计分', 'muted');
+      this.setStatus(t('hintUsed'), 'muted');
     }
   }
 
@@ -149,7 +150,7 @@ export class PuzzleView implements View {
   private onWrong(first: boolean) {
     if (first) this.record(false);
     this.justWrong = true;
-    this.setStatus('不对，再想想', 'bad');
+    this.setStatus(t('wrong'), 'bad');
     this.saveCurrent({ failed: true });
   }
 
@@ -200,7 +201,7 @@ export class PuzzleView implements View {
     this.els.status.dataset.phase = p;
     const r = this.player.runner;
     if (!r) return;
-    const side = r.playerColor === 'white' ? '白方' : '黑方';
+    const side = t(r.playerColor);
     const playing = p === 'player' || p === 'opponent' || p === 'opening';
     this.els.hint.disabled = p !== 'player';
     this.els.solution.disabled = !playing || p === 'opening';
@@ -209,21 +210,21 @@ export class PuzzleView implements View {
     this.els.solution.hidden = p === 'done';
     switch (p) {
       case 'opening':
-        this.setStatus(`你执${side}`, 'muted');
+        this.setStatus(t('youPlay', side), 'muted');
         break;
       case 'player':
-        if (this.justWrong) this.setStatus('不对，再想想', 'bad');
-        else if (r.ply <= 1) this.setStatus(`轮到你走 · 执${side}`, 'turn');
-        else this.setStatus('很好，继续', 'good');
+        if (this.justWrong) this.setStatus(t('wrong'), 'bad');
+        else if (r.ply <= 1) this.setStatus(t('yourTurnSide', side), 'turn');
+        else this.setStatus(t('goodContinue'), 'good');
         break;
       case 'replay':
-        this.setStatus('正在演示答案…', 'muted');
+        this.setStatus(t('showingSolution'), 'muted');
         break;
       case 'done': {
-        if (r.failed) this.setStatus('本题结束（不计分）', 'muted');
+        if (r.failed) this.setStatus(t('puzzleOverUnrated'), 'muted');
         else {
           const d = this.lastDelta;
-          this.setStatus(`解题成功！${d !== null ? ` 评分 ${d >= 0 ? '+' : ''}${d}` : ''}`, 'good');
+          this.setStatus(t('solved') + (d !== null ? t('ratingDelta', `${d >= 0 ? '+' : ''}${d}`) : ''), 'good');
         }
         break;
       }
@@ -238,8 +239,8 @@ export class PuzzleView implements View {
   private buildPanel() {
     const filter = h(
       'select.filter',
-      { 'aria-label': '主题筛选', onchange: () => this.onFilter() },
-      THEME_FILTERS.map((f) => h('option', { value: f.id }, f.label)),
+      { 'aria-label': t('themeFilter'), onchange: () => this.onFilter() },
+      THEME_FILTERS.map((f) => h('option', { value: f.id }, filterLabel(f))),
     );
     filter.value = this.ctx.settings.themeFilter;
     this.els = {
@@ -249,11 +250,11 @@ export class PuzzleView implements View {
       status: h('div.status', { 'data-testid': 'puzzle-status', 'aria-live': 'polite' }),
       meta: h('div.meta', { 'data-testid': 'puzzle-meta' }),
       themes: h('div.chips'),
-      hint: h('button.btn', { onclick: () => this.hint(), title: '提示 (H)' }, '提示'),
-      solution: h('button.btn', { onclick: () => this.showSolution() }, '看答案'),
-      next: h('button.btn.primary', { onclick: () => this.goNext(), title: '下一题 (→)', 'data-testid': 'next-puzzle' }, '下一题 →'),
+      hint: h('button.btn', { onclick: () => this.hint(), title: t('hintTitle') }, t('hint')),
+      solution: h('button.btn', { onclick: () => this.showSolution() }, t('showAnswer')),
+      next: h('button.btn.primary', { onclick: () => this.goNext(), title: t('nextPuzzleTitle'), 'data-testid': 'next-puzzle' }, t('nextPuzzle')),
       filter,
-      history: h('div.history', { 'aria-label': '最近结果' }),
+      history: h('div.history', { 'aria-label': t('recentResults') }),
     };
     const e = this.els;
     e.next.hidden = true;
@@ -261,8 +262,8 @@ export class PuzzleView implements View {
       h(
         'div.stats',
         {},
-        h('div.stat', {}, h('span.label', {}, '谜题评分'), h('span', {}, e.rating, e.ratingNote)),
-        h('div.stat', {}, h('span.label', {}, '连对'), e.streak),
+        h('div.stat', {}, h('span.label', {}, t('puzzleRating')), h('span', {}, e.rating, e.ratingNote)),
+        h('div.stat', {}, h('span.label', {}, t('streak')), e.streak),
       ),
       e.status,
       h('div.puzzle-info', {}, e.meta, e.themes),
@@ -283,7 +284,7 @@ export class PuzzleView implements View {
 
   private renderPuzzleInfo(p: Puzzle) {
     this.els.meta.replaceChildren(
-      h('span', {}, '难度 '),
+      h('span', {}, t('difficulty')),
       h('strong', { 'data-testid': 'puzzle-difficulty' }, String(p.rating)),
       h('a.pid', { href: `https://lichess.org/training/${p.id}`, target: '_blank', rel: 'noopener' }, `#${p.id}`),
     );
@@ -293,14 +294,14 @@ export class PuzzleView implements View {
   private renderStats() {
     const g = this.progress.glicko;
     this.els.rating.textContent = String(Math.round(g.rating));
-    this.els.ratingNote.textContent = g.rd > 110 ? ' 暂定' : '';
+    this.els.ratingNote.textContent = g.rd > 110 ? t('provisional') : '';
     this.els.streak.textContent = String(this.progress.streak);
     const recent = this.progress.history.slice(0, 16).reverse();
     this.els.history.replaceChildren(
       ...recent.map((x) =>
         h('span.dot', {
           class: x.solved ? 'ok' : 'fail',
-          title: `${x.solved ? '✓' : '✗'} 难度 ${x.puzzleRating}，评分 ${x.delta >= 0 ? '+' : ''}${x.delta}`,
+          title: t('historyItem', x.solved ? '✓' : '✗', x.puzzleRating, `${x.delta >= 0 ? '+' : ''}${x.delta}`),
         }),
       ),
     );

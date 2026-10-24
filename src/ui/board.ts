@@ -4,6 +4,7 @@ import type { DrawShape } from 'chessground/draw';
 import type { Key } from 'chessground/types';
 import type { Chess, Square } from 'chess.js';
 import { isPromotion, legalDests, turnColor, type Color } from '../core/chessutil';
+import { t } from '../i18n';
 
 export type UserMoveHandler = (uci: string) => void;
 
@@ -128,7 +129,7 @@ export class Board {
       const overlay = document.createElement('div');
       overlay.className = 'promotion';
       overlay.setAttribute('role', 'dialog');
-      overlay.setAttribute('aria-label', '选择升变棋子');
+      overlay.setAttribute('aria-label', t('choosePromotion'));
       const done = (r: string | null) => {
         this.closePromotion();
         resolve(r);
@@ -143,7 +144,7 @@ export class Board {
         const sq = document.createElement('button');
         sq.className = 'promo-choice';
         sq.dataset.role = letter;
-        sq.setAttribute('aria-label', { q: '后', n: '马', r: '车', b: '象' }[letter]);
+        sq.setAttribute('aria-label', t(role));
         sq.style.left = `${col * 12.5}%`;
         sq.style.top = `${(row + dir * i) * 12.5}%`;
         const piece = document.createElement('piece');

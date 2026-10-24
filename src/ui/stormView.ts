@@ -1,6 +1,7 @@
 import { Chess } from 'chess.js';
 import type { Puzzle } from '../core/puzzle';
 import { selectPuzzle } from '../core/selector';
+import { t } from '../i18n';
 import { store } from '../core/storage';
 import type { Ctx, PuzzleDb, View } from './context';
 import { h } from './dom';
@@ -48,9 +49,9 @@ export class StormView implements View {
       h(
         'div.stats',
         {},
-        h('div.stat', {}, h('span.label', {}, '时间'), this.els.clock),
-        h('div.stat', {}, h('span.label', {}, '得分'), this.els.score),
-        h('div.stat', {}, h('span.label', {}, '失误'), this.els.strikes),
+        h('div.stat', {}, h('span.label', {}, t('time')), this.els.clock),
+        h('div.stat', {}, h('span.label', {}, t('score')), this.els.score),
+        h('div.stat', {}, h('span.label', {}, t('strikes')), this.els.strikes),
       ),
       this.els.body,
     );
@@ -80,10 +81,10 @@ export class StormView implements View {
     this.ctx.board.shapes([]);
     this.els.body.replaceChildren(
       last !== undefined
-        ? h('div.status.good', { 'data-testid': 'storm-result' }, newRecord ? `新纪录：${last} 题！` : `本轮：${last} 题`)
-        : h('div.status.muted', {}, '3 分钟内尽量多解题，错 3 题结束。题目由易到难。'),
-      h('p.muted-text', {}, `最高分 ${rec.best} · 已玩 ${rec.runs} 轮`),
-      h('div.buttons', {}, h('button.btn.primary', { onclick: () => this.start(), 'data-testid': 'storm-start' }, last !== undefined ? '再来一轮' : '开始冲刺')),
+        ? h('div.status.good', { 'data-testid': 'storm-result' }, newRecord ? t('newRecord', last) : t('thisRun', last))
+        : h('div.status.muted', {}, t('stormIntro')),
+      h('p.muted-text', {}, t('stormBest', rec.best, rec.runs)),
+      h('div.buttons', {}, h('button.btn.primary', { onclick: () => this.start(), 'data-testid': 'storm-start' }, last !== undefined ? t('playAgainRun') : t('startStorm'))),
     );
   }
 
@@ -96,7 +97,7 @@ export class StormView implements View {
     this.endsAt = performance.now() + DURATION_MS;
     this.els.score.textContent = '0';
     this.renderStrikes();
-    this.els.body.replaceChildren(h('div.status.turn', {}, '开始！'), h('div.buttons', {}, h('button.btn', { onclick: () => this.end() }, '结束本轮')));
+    this.els.body.replaceChildren(h('div.status.turn', {}, t('go')), h('div.buttons', {}, h('button.btn', { onclick: () => this.end() }, t('endRun'))));
     this.tick = setInterval(() => this.updateClock(), 200);
     this.updateClock();
     this.nextPuzzle();

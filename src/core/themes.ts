@@ -1,3 +1,5 @@
+import { getLang } from '../i18n';
+
 /** Chinese names for Lichess puzzle themes. Unknown keys fall back to the key. */
 export const THEME_NAMES: Record<string, string> = {
   advancedPawn: '挺进兵',
@@ -74,7 +76,30 @@ export const THEME_NAMES: Record<string, string> = {
   zugzwang: '被迫走子',
 };
 
+/** English names where splitting the camelCase key isn't enough. */
+const EN_NAMES: Record<string, string> = {
+  attackingF2F7: 'Attacking f2/f7',
+  mate: 'Checkmate',
+  mateIn1: 'Mate in 1',
+  mateIn2: 'Mate in 2',
+  mateIn3: 'Mate in 3',
+  mateIn4: 'Mate in 4',
+  mateIn5: 'Mate in 5+',
+  oneMove: 'One move',
+  superGM: 'Super GM game',
+  masterVsMaster: 'Master vs master',
+  xRayAttack: 'X-ray attack',
+  hangingPiece: 'Hanging piece',
+  enPassant: 'En passant',
+  queenRookEndgame: 'Queen and rook endgame',
+};
+
 export function themeName(key: string): string {
+  if (getLang() === 'en') {
+    if (EN_NAMES[key]) return EN_NAMES[key];
+    const words = key.replace(/([A-Z])/g, ' $1').toLowerCase();
+    return words.charAt(0).toUpperCase() + words.slice(1);
+  }
   return THEME_NAMES[key] ?? key;
 }
 
@@ -87,19 +112,23 @@ export function visibleThemes(themes: readonly string[]): string[] {
 }
 
 /** Filter choices offered in the UI; each maps to one or more Lichess theme keys. */
-export const THEME_FILTERS: { id: string; label: string; themes: string[] }[] = [
-  { id: 'all', label: '全部主题', themes: [] },
-  { id: 'mate', label: '杀王', themes: ['mate'] },
-  { id: 'mateIn1', label: '一步杀', themes: ['mateIn1'] },
-  { id: 'mateIn2', label: '两步杀', themes: ['mateIn2'] },
-  { id: 'fork', label: '捉双（叉子）', themes: ['fork'] },
-  { id: 'pin', label: '牵制', themes: ['pin'] },
-  { id: 'skewer', label: '串击', themes: ['skewer'] },
-  { id: 'discoveredAttack', label: '闪击', themes: ['discoveredAttack'] },
-  { id: 'sacrifice', label: '弃子', themes: ['sacrifice'] },
-  { id: 'deflection', label: '引离 / 引入', themes: ['deflection', 'attraction'] },
-  { id: 'hangingPiece', label: '白吃子', themes: ['hangingPiece', 'trappedPiece'] },
-  { id: 'endgame', label: '残局', themes: ['endgame'] },
-  { id: 'opening', label: '开局', themes: ['opening'] },
-  { id: 'promotion', label: '升变', themes: ['promotion', 'advancedPawn'] },
+export const THEME_FILTERS: { id: string; label: string; en: string; themes: string[] }[] = [
+  { id: 'all', label: '全部主题', en: 'All themes', themes: [] },
+  { id: 'mate', label: '杀王', en: 'Checkmate', themes: ['mate'] },
+  { id: 'mateIn1', label: '一步杀', en: 'Mate in 1', themes: ['mateIn1'] },
+  { id: 'mateIn2', label: '两步杀', en: 'Mate in 2', themes: ['mateIn2'] },
+  { id: 'fork', label: '捉双（叉子）', en: 'Fork', themes: ['fork'] },
+  { id: 'pin', label: '牵制', en: 'Pin', themes: ['pin'] },
+  { id: 'skewer', label: '串击', en: 'Skewer', themes: ['skewer'] },
+  { id: 'discoveredAttack', label: '闪击', en: 'Discovered attack', themes: ['discoveredAttack'] },
+  { id: 'sacrifice', label: '弃子', en: 'Sacrifice', themes: ['sacrifice'] },
+  { id: 'deflection', label: '引离 / 引入', en: 'Deflection / attraction', themes: ['deflection', 'attraction'] },
+  { id: 'hangingPiece', label: '白吃子', en: 'Hanging piece', themes: ['hangingPiece', 'trappedPiece'] },
+  { id: 'endgame', label: '残局', en: 'Endgame', themes: ['endgame'] },
+  { id: 'opening', label: '开局', en: 'Opening', themes: ['opening'] },
+  { id: 'promotion', label: '升变', en: 'Promotion', themes: ['promotion', 'advancedPawn'] },
 ];
+
+export function filterLabel(f: { label: string; en: string }): string {
+  return getLang() === 'en' ? f.en : f.label;
+}

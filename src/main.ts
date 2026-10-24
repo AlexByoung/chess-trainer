@@ -11,6 +11,7 @@ import { settingsPanel } from './ui/settingsPanel';
 import { setHapticsEnabled } from './ui/haptics';
 import { setSoundEnabled, unlockAudio } from './ui/sound';
 import { StormView } from './ui/stormView';
+import { setLang, t, type Key } from './i18n';
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector(sel) as T;
 
@@ -18,6 +19,14 @@ let settings: Settings = store.loadSettings();
 
 function applySettings() {
   const root = document.documentElement;
+  setLang(settings.lang === 'en' ? 'en' : 'zh');
+  document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => (el.textContent = t(el.dataset.i18n as Key)));
+  document.querySelectorAll<HTMLElement>('[data-i18n-label]').forEach((el) => {
+    const label = t(el.dataset.i18nLabel as Key);
+    el.setAttribute('aria-label', label);
+    el.title = label;
+  });
+  document.title = settings.lang === 'en' ? 'Chess Trainer' : '棋练 · 国际象棋训练';
   if (settings.theme === 'system') delete root.dataset.theme;
   else root.dataset.theme = settings.theme;
   root.dataset.board = settings.board;
@@ -30,15 +39,21 @@ function applySettings() {
   setHapticsEnabled(settings.haptics);
   const btn = $('#sound-toggle');
   btn.classList.toggle('off', !settings.sound);
-  btn.setAttribute('aria-label', settings.sound ? '静音' : '打开声音');
-  btn.title = settings.sound ? '静音' : '打开声音';
+  btn.setAttribute('aria-label', t(settings.sound ? 'mute' : 'unmute'));
+  btn.title = t(settings.sound ? 'mute' : 'unmute');
 }
 
 function updateSettings(patch: Partial<Settings>) {
+  const langChanged = patch.lang !== undefined && patch.lang !== settings.lang;
   settings = { ...settings, ...patch };
   ctx.settings = settings;
   store.saveSettings(settings);
   applySettings();
+  if (langChanged) {
+    // Rebuild the current view and the settings sheet in the new language.
+    show(currentName);
+    openSettings();
+  }
 }
 
 // ---- puzzle database (loaded once, lazily) --------------------------------
@@ -91,7 +106,7 @@ const evalBar: EvalBar = {
       label = (score.cp / 100).toFixed(1);
     }
     evalFill.style.height = `${white}%`;
-    evalEl.title = label ? `评估 ${label}` : '';
+    evalEl.title = label ? t('evalTitle', label) : '';
     evalEl.dataset.label = label;
   },
 };
@@ -153,11 +168,10 @@ document.querySelectorAll<HTMLElement>('.tabs button').forEach((b) =>
 );
 
 $('#sound-toggle').addEventListener('click', () => updateSettings({ sound: !settings.sound }));
-$('#settings-open').addEventListener('click', () =>
-  modal.open(
-    settingsPanel(settings, updateSettings, () => modal.close(), () => show(currentName)),
-  ),
-);
+function openSettings() {
+  modal.open(settingsPanel(settings, updateSettings, () => modal.close(), () => show(currentName)));
+}
+$('#settings-open').addEventListener('click', openSettings);
 
 document.addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;

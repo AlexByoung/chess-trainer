@@ -31,11 +31,11 @@
   <body>
     <div id="app">
       <header class="topbar">
-        <div class="brand"><span class="logo" aria-hidden="true">♞</span><span>棋练</span></div>
+        <div class="brand"><span class="logo" aria-hidden="true">♞</span><span data-i18n="appTitle">棋练</span></div>
         <nav class="tabs" aria-label="模式">
-          <button type="button" data-view="puzzle">谜题</button>
-          <button type="button" data-view="storm">冲刺</button>
-          <button type="button" data-view="game">对局</button>
+          <button type="button" data-view="puzzle" data-i18n="tabPuzzle">谜题</button>
+          <button type="button" data-view="storm" data-i18n="tabStorm">冲刺</button>
+          <button type="button" data-view="game" data-i18n="tabGame">对局</button>
         </nav>
         <div class="actions">
           <button type="button" id="sound-toggle" class="icon" aria-label="静音">
@@ -45,7 +45,7 @@
               <path class="mute" d="M16.5 9.5l5 5M21.5 9.5l-5 5" />
             </svg>
           </button>
-          <button type="button" id="settings-open" class="icon" aria-label="设置" title="设置">
+          <button type="button" id="settings-open" class="icon" aria-label="设置" title="设置" data-i18n-label="settings">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="12" cy="12" r="3.2" />
               <path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" />

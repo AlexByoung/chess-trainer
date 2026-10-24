@@ -1,17 +1,6 @@
-import { defaultProgress, PIECE_SETS, store, type BoardTheme, type PieceSet, type Settings, type ThemeMode } from '../core/storage';
+import { defaultProgress, PIECE_SETS, store, type BoardTheme, type Lang, type PieceSet, type Settings, type ThemeMode } from '../core/storage';
+import { t } from '../i18n';
 import { h } from './dom';
-
-const THEMES: [ThemeMode, string][] = [
-  ['system', '跟随系统'],
-  ['light', '浅色'],
-  ['dark', '深色'],
-];
-
-const BOARDS: [BoardTheme, string][] = [
-  ['green', '青绿'],
-  ['brown', '木纹'],
-  ['blue', '灰蓝'],
-];
 
 /** Builds the settings sheet; every change is applied immediately through `update`. */
 export function settingsPanel(
@@ -20,6 +9,16 @@ export function settingsPanel(
   close: () => void,
   onResetPuzzles: () => void,
 ): HTMLElement {
+  const THEMES: [ThemeMode, string][] = [
+    ['system', t('themeSystem')],
+    ['light', t('themeLight')],
+    ['dark', t('themeDark')],
+  ];
+  const BOARDS: [BoardTheme, string][] = [
+    ['green', t('boardGreen')],
+    ['brown', t('boardBrown')],
+    ['blue', t('boardBlue')],
+  ];
   const progress = store.loadProgress();
   const storm = store.loadStorm();
   const rate = progress.attempted ? Math.round((progress.solved / progress.attempted) * 100) : 0;
@@ -47,7 +46,7 @@ export function settingsPanel(
   const pieceBtns = PIECE_SETS.map((set) =>
     h(
       'button.piece-choice',
-      { class: set === settings.pieces ? 'on' : '', 'data-set': set, title: set, 'aria-label': `棋子 ${set}`, onclick: () => pickPieces(set) },
+      { class: set === settings.pieces ? 'on' : '', 'data-set': set, title: set, 'aria-label': t('pieceSet', set), onclick: () => pickPieces(set) },
       h('img', { src: `pieces/${set}/wN.svg`, alt: '' }),
       h('img', { src: `pieces/${set}/bR.svg`, alt: '' }),
     ),
@@ -67,38 +66,47 @@ export function settingsPanel(
           close();
         } else {
           reset.dataset.confirm = '1';
-          reset.textContent = '再点一次确认重置';
+          reset.textContent = t('confirmReset');
         }
       },
     },
-    '重置谜题进度',
+    t('resetProgress'),
   );
 
   return h(
     'div.settings',
     {},
-    h('h2', {}, '设置'),
-    h('h3', {}, '外观'),
+    h('h2', {}, t('settings')),
+    h('h3', {}, t('language')),
+    seg<Lang>(
+      [
+        ['zh', '中文'],
+        ['en', 'English'],
+      ],
+      settings.lang,
+      (v) => update({ lang: v }),
+    ),
+    h('h3', {}, t('appearance')),
     seg(THEMES, settings.theme, (v) => update({ theme: v })),
-    h('h3', {}, '棋盘配色'),
+    h('h3', {}, t('boardColors')),
     boardSeg,
-    h('h3', {}, '棋子样式'),
+    h('h3', {}, t('pieceStyle')),
     h('div.piece-sets', {}, pieceBtns),
-    h('h3', {}, '偏好'),
-    toggle('音效', 'sound'),
-    toggle('走错时震动（手机）', 'haptics'),
-    toggle('解对后自动进入下一题', 'autoNext'),
-    h('h3', {}, '记录'),
+    h('h3', {}, t('preferences')),
+    toggle(t('sound'), 'sound'),
+    toggle(t('haptics'), 'haptics'),
+    toggle(t('autoNext'), 'autoNext'),
+    h('h3', {}, t('stats')),
     h(
       'p.muted-text',
       {},
-      `谜题评分 ${Math.round(progress.glicko.rating)} · 已做 ${progress.attempted} 题 · 正确率 ${rate}% · 最高连对 ${progress.bestStreak} · 冲刺最高 ${storm.best}`,
+      t('statsLine', Math.round(progress.glicko.rating), progress.attempted, rate, progress.bestStreak, storm.best),
     ),
-    h('div.buttons', {}, reset, h('button.btn.primary', { onclick: close }, '完成')),
+    h('div.buttons', {}, reset, h('button.btn.primary', { onclick: close }, t('done'))),
     h(
       'p.foot',
       {},
-      '谜题来自 Lichess 公开题库（CC0），引擎 Stockfish（GPLv3），棋盘 chessground（GPLv3），棋子来自 Lichess（见 pieces/LICENSES.md）。版本 ',
+      t('credits'),
       h('code', {}, __APP_VERSION__),
     ),
   );

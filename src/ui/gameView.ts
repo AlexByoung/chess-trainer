@@ -1,19 +1,23 @@
 import { Chess } from 'chess.js';
 import { gameEnd, moveToUci, playUci, turnColor, type Color, type GameEnd } from '../core/chessutil';
-import { FULL_STRENGTH, LEVELS, levelById, levelOptions } from '../core/levels';
+import { FULL_STRENGTH, LEVELS, levelById, levelName, levelOptions } from '../core/levels';
 import { store, type SavedGame } from '../core/storage';
+import { t } from '../i18n';
 import { engine } from '../engine/engine';
 import type { Ctx, View } from './context';
 import { h } from './dom';
 import { moveSound, play } from './sound';
 
-const END_REASON: Record<GameEnd['kind'], string> = {
-  checkmate: '将杀',
-  stalemate: '逼和',
-  threefold: '三次重复局面',
-  fifty: '50 步规则',
-  insufficient: '子力不足',
-};
+type Outcome = 'win' | 'loss' | 'draw';
+
+/** Saved results are "<outcome>:<end kind>" so they can be shown in either language. */
+function resultText(result: string): { text: string; title: string; reason: string; outcome: Outcome | null } {
+  const [outcome, kind] = result.split(':') as [Outcome, GameEnd['kind']];
+  if (!kind) return { text: result, title: result, reason: '', outcome: null }; // saved by an older version
+  const title = t(outcome === 'win' ? 'youWon' : outcome === 'loss' ? 'youLost' : 'draw');
+  const reason = t(kind);
+  return { text: `${title} · ${reason}`, title, reason, outcome };
+}
 
 /** Full game against Stockfish with selectable strength; auto-saved after every move. */
 export class GameView implements View {
@@ -43,7 +47,7 @@ export class GameView implements View {
         this.engineReady = true;
         this.refreshStatus();
       },
-      (e) => this.setStatus(`引擎加载失败：${e instanceof Error ? e.message : e}`, 'bad'),
+      (e) => this.setStatus(t('engineFailed', e instanceof Error ? e.message : String(e)), 'bad'),
     );
     if (this.game) {
       this.chess = new Chess();
@@ -155,16 +159,16 @@ export class GameView implements View {
     const g = this.game!;
     const end = gameEnd(this.chess);
     if (!end) return false;
-    const reason = END_REASON[end.kind];
-    const title = end.kind === 'checkmate' ? (end.winner === g.playerColor ? '你赢了' : '你输了') : '和棋';
-    g.result = `${title} · ${reason}`;
+    const outcome: Outcome = end.kind === 'checkmate' ? (end.winner === g.playerColor ? 'win' : 'loss') : 'draw';
+    g.result = `${outcome}:${end.kind}`;
     this.thinking = false;
     this.save();
     this.render();
     this.refreshStatus();
     this.updateEval();
     play('end');
-    this.showResult(title, reason);
+    const r = resultText(g.result);
+    this.showResult(r.title, r.reason);
     return true;
   }
 
@@ -192,7 +196,7 @@ export class GameView implements View {
     const g = this.game;
     if (!g || g.result || this.thinking || turnColor(this.chess) !== g.playerColor) return;
     const token = ++this.token;
-    this.setStatus('计算提示…', 'muted');
+    this.setStatus(t('computingHint'), 'muted');
     const res = await engine.search({ moves: g.moves, options: FULL_STRENGTH, movetime: 1200 });
     if (token !== this.token) return;
     this.refreshStatus();
@@ -239,12 +243,15 @@ export class GameView implements View {
 
   private refreshStatus() {
     const g = this.game;
-    if (!g) return this.setStatus('选择执子和难度开始对局', 'muted');
-    if (g.result) return this.setStatus(g.result, g.result.startsWith('你赢') ? 'good' : g.result.startsWith('你输') ? 'bad' : 'muted');
-    if (!this.engineReady) return this.setStatus('引擎加载中…', 'muted');
-    if (this.thinking) return this.setStatus('对手思考中…', 'muted');
-    const check = this.chess.inCheck() ? ' · 被将军！' : '';
-    this.setStatus(`轮到你走${check}`, check ? 'bad' : 'turn');
+    if (!g) return this.setStatus(t('pickToStart'), 'muted');
+    if (g.result) {
+      const r = resultText(g.result);
+      return this.setStatus(r.text, r.outcome === 'win' ? 'good' : r.outcome === 'loss' ? 'bad' : 'muted');
+    }
+    if (!this.engineReady) return this.setStatus(t('engineLoading'), 'muted');
+    if (this.thinking) return this.setStatus(t('aiThinking'), 'muted');
+    const check = this.chess.inCheck() ? t('inCheck') : '';
+    this.setStatus(t('yourTurn') + check, check ? 'bad' : 'turn');
   }
 
   private setStatus(text: string, tone: 'muted' | 'good' | 'bad' | 'turn') {
@@ -256,11 +263,11 @@ export class GameView implements View {
 
   private renderOpponent() {
     const g = this.game;
-    if (!g) return this.els.opponent.replaceChildren(h('span', {}, '人机对局'));
+    if (!g) return this.els.opponent.replaceChildren(h('span', {}, t('vsComputer')));
     const lv = levelById(g.level);
     this.els.opponent.replaceChildren(
-      h('span.label', {}, `你执${g.playerColor === 'white' ? '白' : '黑'}`),
-      h('span', {}, ` vs Stockfish · ${lv.name}（约 ${lv.elo}）`),
+      h('span.label', {}, t(g.playerColor === 'white' ? 'youAreWhite' : 'youAreBlack')),
+      h('span', {}, t('vsLevel', levelName(lv), lv.elo)),
     );
   }
 
@@ -281,8 +288,8 @@ export class GameView implements View {
       opponent: h('div.opponent'),
       status: h('div.status', { 'data-testid': 'game-status', 'aria-live': 'polite' }),
       moves: h('div.moves', { 'data-testid': 'move-list' }),
-      undo: h('button.btn', { onclick: () => this.undo(), title: '悔棋 (U)' }, '悔棋'),
-      hint: h('button.btn', { onclick: () => this.hint(), title: '提示 (H)' }, '提示'),
+      undo: h('button.btn', { onclick: () => this.undo(), title: t('undoTitle') }, t('undo')),
+      hint: h('button.btn', { onclick: () => this.hint(), title: t('hintTitle') }, t('hint')),
       evalToggle,
     };
     const e = this.els;
@@ -295,10 +302,10 @@ export class GameView implements View {
         {},
         e.undo,
         e.hint,
-        h('button.btn', { onclick: () => this.flip(), title: '翻转棋盘 (F)' }, '翻转'),
-        h('button.btn', { onclick: () => this.openNewGame(true), 'data-testid': 'new-game' }, '新对局'),
+        h('button.btn', { onclick: () => this.flip(), title: t('flipTitle') }, t('flip')),
+        h('button.btn', { onclick: () => this.openNewGame(true), 'data-testid': 'new-game' }, t('newGame')),
       ),
-      h('label.toggle', {}, evalToggle, h('span', {}, '局面评估条')),
+      h('label.toggle', {}, evalToggle, h('span', {}, t('evalBar'))),
     );
     this.refreshStatus();
   }
@@ -321,8 +328,8 @@ export class GameView implements View {
         h(
           'div.buttons',
           {},
-          h('button.btn', { onclick: () => this.ctx.modal.close() }, '查看棋盘'),
-          h('button.btn.primary', { onclick: () => this.newGame(g.choice, g.level) }, '再来一局'),
+          h('button.btn', { onclick: () => this.ctx.modal.close() }, t('viewBoard')),
+          h('button.btn.primary', { onclick: () => this.newGame(g.choice, g.level) }, t('playAgain')),
         ),
       ),
     );
@@ -332,14 +339,14 @@ export class GameView implements View {
     let choice: SavedGame['choice'] = this.game?.choice ?? 'white';
     let level = this.game?.level ?? 3;
     const colorBtns = (['white', 'random', 'black'] as const).map((c) =>
-      h('button.seg', { 'data-color': c, onclick: () => ((choice = c), sync()) }, { white: '执白', random: '随机', black: '执黑' }[c]),
+      h('button.seg', { 'data-color': c, onclick: () => ((choice = c), sync()) }, t(({ white: 'playWhite', random: 'playRandom', black: 'playBlack' } as const)[c])),
     );
     const levelBtns = LEVELS.map((l) =>
       h(
         'button.level',
         { 'data-level': l.id, onclick: () => ((level = l.id), sync()) },
-        h('strong', {}, `${l.id} · ${l.name}`),
-        h('span', {}, `约 ${l.elo}`),
+        h('strong', {}, `${l.id} · ${levelName(l)}`),
+        h('span', {}, t('about', l.elo)),
       ),
     );
     const sync = () => {
@@ -351,14 +358,14 @@ export class GameView implements View {
       h(
         'div.newgame',
         { 'data-testid': 'new-game-dialog' },
-        h('h2', {}, '新对局'),
+        h('h2', {}, t('newGame')),
         h('div.segmented', {}, colorBtns),
         h('div.levels', {}, levelBtns),
         h(
           'div.buttons',
           {},
-          dismissible ? h('button.btn', { onclick: () => this.ctx.modal.close() }, '取消') : null,
-          h('button.btn.primary', { onclick: () => this.newGame(choice, level), 'data-testid': 'start-game' }, '开始对局'),
+          dismissible ? h('button.btn', { onclick: () => this.ctx.modal.close() }, t('cancel')) : null,
+          h('button.btn.primary', { onclick: () => this.newGame(choice, level), 'data-testid': 'start-game' }, t('startGame')),
         ),
       ),
       { dismissible },
