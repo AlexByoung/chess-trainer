@@ -80,12 +80,15 @@ test('a wrong move is marked red, taken back, and the puzzle no longer counts', 
   const wrong = chess
     .moves({ verbose: true })
     .find((m) => m.lan !== p.moves[1] && !m.promotion && !m.san.includes('#'))!;
-  const before = await page.locator('cg-board piece').count();
+  // Count real pieces only: a captured piece fades out during the setup-move animation.
+  const pieces = page.locator('cg-board piece:not(.fading):not(.ghost)');
+  await expect(page.locator('cg-board piece.fading, cg-board piece.anim')).toHaveCount(0);
+  const before = await pieces.count();
 
   await dragMove(page, wrong.lan);
   await expect(page.getByTestId('puzzle-status')).toContainText('不对');
   // Taken back automatically.
-  await expect(page.locator('cg-board piece')).toHaveCount(before);
+  await expect(pieces).toHaveCount(before);
   expect((await progress(page)).current.ply).toBe(1);
   await expect(page.getByTestId('puzzle-streak')).toHaveText('0');
   expect((await progress(page)).glicko.rating).toBeLessThan(1200);
